@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: classpath:db/changelog/sql/001-init-orders-table.sql
+  - include:
+      file: classpath:db/changelog/xml/002-add-order-payment-fields.xml
+  - include:
+      file: classpath:db/changelog/xml/003-create-tasks-table.xml

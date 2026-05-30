@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="002-add-order-payment-fields" author="bronnikov">
+        <addColumn tableName="orders">
+            <column name="client_estimate" type="DECIMAL(19, 2)"/>
+            <column name="final_amount" type="DECIMAL(19, 2)"/>
+            <column name="authorized_amount" type="DECIMAL(19, 2)"/>
+            <column name="captured_amount" type="DECIMAL(19, 2)"/>
+            <column name="payment_status" type="VARCHAR(64)" defaultValue="NEW">
+                <constraints nullable="false"/>
+            </column>
+            <column name="failure_reason" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
