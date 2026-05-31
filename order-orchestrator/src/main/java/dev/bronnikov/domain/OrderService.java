@@ -1,6 +1,7 @@
 package dev.bronnikov.domain;
 
 import dev.bronnikov.api.OrderCreateRequestDto;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,18 +15,24 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderJpaRepository orderRepository;
+    private final TaskRepository taskRepository;
 
+    @Transactional
     public OrderEntity createOrder(
             OrderCreateRequestDto requestDto
     ) {
-        var entity = OrderEntity.builder()
+        var order = OrderEntity.builder()
                 .address(requestDto.address())
                 .clientEstimate(requestDto.clientEstimate())
                 .build();
 
-        // todo асинхронная обработка заказа (создать таску)
-
-        return orderRepository.save(entity);
+        var orderEntity = orderRepository.save(order);
+        var task = TaskEntity.builder()
+                .orderId(orderEntity.getId())
+                .status(TaskStatus.NEW)
+                .build();
+        taskRepository.save(task);
+        return orderEntity;
     }
 
     public Optional<OrderEntity> findOrder(UUID id) {

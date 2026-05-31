@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class TaskEntity {
 
     @Id
@@ -33,23 +35,23 @@ public class TaskEntity {
     private int attempts = 0;
 
     @Column(name = "next_attempt_at")
-    private Instant nextAttemptAt;
+    private OffsetDateTime nextAttemptAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+    private OffsetDateTime updatedAt;
 
     @PrePersist
     void onCreate() {
-        var now = Instant.now();
+        var now = OffsetDateTime.now();
         createdAt = now;
         updatedAt = now;
     }
 
     @PreUpdate
     void onUpdate() {
-        updatedAt = Instant.now();
+        updatedAt = OffsetDateTime.now();
     }
 }
