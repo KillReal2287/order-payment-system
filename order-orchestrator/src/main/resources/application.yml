@@ -22,3 +22,10 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui
+
+order-payment-system:
+  max-attempts-for-blocking: 5
+
+external:
+  payment-stub:
+    base-url: ${PAYMENT_STUB_URL:http://localhost:8081}

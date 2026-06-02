@@ -14,7 +14,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final OrderJpaRepository orderRepository;
+    private final OrderRepository orderRepository;
     private final TaskRepository taskRepository;
 
     @Transactional
@@ -33,6 +33,12 @@ public class OrderService {
                 .build();
         taskRepository.save(task);
         return orderEntity;
+    }
+
+    public void cancelOrder(OrderEntity orderEntity, String reason, PaymentStatus paymentStatus) {
+        orderEntity.setFailureReason(reason);
+        orderEntity.setPaymentStatus(paymentStatus);
+        orderRepository.save(orderEntity);
     }
 
     public Optional<OrderEntity> findOrder(UUID id) {
