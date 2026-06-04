@@ -2,6 +2,8 @@ package dev.bronnikov.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -37,21 +39,11 @@ public class TaskEntity {
     @Column(name = "next_attempt_at")
     private OffsetDateTime nextAttemptAt;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
-
-    @PrePersist
-    void onCreate() {
-        var now = OffsetDateTime.now();
-        createdAt = now;
-        updatedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = OffsetDateTime.now();
-    }
 }

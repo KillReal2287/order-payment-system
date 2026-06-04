@@ -14,18 +14,20 @@ import org.springframework.stereotype.Component;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class TaskDispatcher {
-    private final TaskProccessor taskProccessor;
+    private final TaskProcessor taskProcessor;
     private final OrderPaymentSystemConfig orderPaymentSystemConfig;
     private final TaskRepository taskRepository;
     private final OrderService orderService;
+    private final ExecutorService executorService;
 
     public void dispatchTask(TaskEntity task) {
-        CompletableFuture.supplyAsync(() -> taskProccessor.handleTask(task))
+        CompletableFuture.supplyAsync(() -> taskProcessor.handleTask(task), executorService)
                 .thenAccept(result -> handleTaskResult(result, task))
                 .exceptionally(ex -> handleException(ex, task));
     }
@@ -40,7 +42,7 @@ public class TaskDispatcher {
 
     private void retryTask(TaskEntity task) {
         int attempts = task.getAttempts()+1;
-        if (attempts > orderPaymentSystemConfig.getMaxAttemptsForBlocking()){
+        if (attempts >= orderPaymentSystemConfig.getMaxAttemptsForBlocking()){
             log.error("Таска уже заблочена, тут надо завершать её окончательно {}", task);
             updateTaskStatusAndSave(TaskStatus.FAILED_NON_RETRYABLE, task);
             Optional<OrderEntity> orderEntity = orderService.findOrder(task.getOrderId());
@@ -59,7 +61,7 @@ public class TaskDispatcher {
     }
 
     private Void handleException(Throwable ex, TaskEntity task) {
-        log.error("Error while executing task {}", ex.getMessage());
+        log.error("Error while executing task {}", task,  ex);
         retryTask(task);
         return null;
     }

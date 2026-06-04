@@ -4,7 +4,6 @@ import dev.bronnikov.api.payment.AuthorizationStatus;
 import dev.bronnikov.api.payment.AuthorizePaymentRequestDto;
 import dev.bronnikov.api.payment.AuthorizePaymentResponseDto;
 import dev.bronnikov.api.payment.CapturePaymentRequestDto;
-import dev.bronnikov.api.payment.CapturePaymentResponseDto;
 import dev.bronnikov.api.payment.CaptureStatus;
 import dev.bronnikov.api.warehouse.CalculatePricingRequestDto;
 import dev.bronnikov.api.warehouse.CalculatePricingResponseDto;
@@ -27,7 +26,7 @@ import java.util.concurrent.ExecutorService;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TaskProccessor {
+public class TaskProcessor {
     private final StubHttpClient stubClient;
     private final ExecutorService executorService;
 
@@ -44,6 +43,8 @@ public class TaskProccessor {
         OrderEntity order = orderEntity.get();
         AuthorizePaymentRequestDto authorizeRequest = new AuthorizePaymentRequestDto(1L, order.getClientEstimate());
         var authorizeResponse = stubClient.authorizePayment(authorizeRequest);
+        order.setAuthorizedAmount(authorizeResponse.authorizedAmount());
+        orderRepository.save(order);
         if (authorizeResponse.status().equals(AuthorizationStatus.DECLINED)) {
             log.error("The card was declined, order {}", order);
             orderService.cancelOrder(order, authorizeResponse.message(), PaymentStatus.AUTHORIZATION_FAILED);
@@ -80,6 +81,7 @@ public class TaskProccessor {
     , OrderEntity order) {
         if (priceResponse.finalAmount().compareTo(authorizeResponse.authorizedAmount()) > 0) {
             log.error("Произошел перерасчет для order {}!", order);
+            order.setFinalAmount(priceResponse.finalAmount());
             orderService.cancelOrder(order, "The payment has been changed", PaymentStatus.PRICE_CHANGED_FAILED);
             return TaskStatus.FAILED_NON_RETRYABLE;
         }
@@ -91,6 +93,8 @@ public class TaskProccessor {
         }
         log.info("Средства списаны, финальное сохранение статусов таски и заказа");
         order.setPaymentStatus(PaymentStatus.SUCCEED_PAID);
+        order.setFinalAmount(priceResponse.finalAmount());
+        order.setCapturedAmount(captureResponse.capturedAmount());
         orderRepository.save(order);
         return TaskStatus.SUCCEEDED;
     }
